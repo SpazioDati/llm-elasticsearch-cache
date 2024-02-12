@@ -27,9 +27,9 @@ class ElasticSearchCache(BaseCache):
             es_index: str
                 The name of the index to use for the cache store.
             store_input: bool
-                Whether to store the LLM input in the cache, i.e. the model parameters and the prompt
+                Whether to store the LLM input in the cache, i.e. the input prompt.
             store_datetime: bool
-                Whether to store the datetime in the cache, i.e. the time of the first request for an input
+                Whether to store the datetime in the cache, i.e. the time of the first request for an input.
             metadata: Optional[dict]
                 Additional metadata to store in the cache, i.e for filtering. Must be JSON serializable.
         """
