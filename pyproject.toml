@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "llm-elasticsearch-cache"
+version = "0.1.0"
+description = "A caching layer for LLMs that exploits Elasticsearch, fully compatible with Langchain caching"
+authors = ["Giacomo Berardi <berardi@spaziodati.eu>"]
+readme = "README.md"
+packages = [{include = "llm_elasticsearch_cache"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+langchain = "^0.1.6"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pre-commit = "^3.6.1"
+black = "^24.1.1"
+isort = "^5.13.2"
+mypy = "^1.8.0"
+flake8 = "^7.0.0"
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
