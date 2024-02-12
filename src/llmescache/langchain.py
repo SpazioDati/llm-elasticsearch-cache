@@ -16,6 +16,7 @@ class ElasticSearchCache(BaseCache):
         es_index: str,
         store_input: bool = True,
         store_datetime: bool = True,
+        store_input_param: bool = True,
         metadata: Optional[Dict[str, Any]] = None,
     ):
         """
@@ -30,6 +31,8 @@ class ElasticSearchCache(BaseCache):
                 Whether to store the LLM input in the cache, i.e. the input prompt.
             store_datetime: bool
                 Whether to store the datetime in the cache, i.e. the time of the first request for an input.
+            store_input_param: bool
+                Whether to store the input parameters in the cache, i.e. the parameters used to generate the LLM input.
             metadata: Optional[dict]
                 Additional metadata to store in the cache, i.e for filtering. Must be JSON serializable.
         """
@@ -39,6 +42,7 @@ class ElasticSearchCache(BaseCache):
 
         self.store_input = store_input
         self.store_datetime = store_datetime
+        self.store_input_param = store_input_param
         self.metadata = metadata or {}
 
         if not self._es_client.ping():
@@ -69,9 +73,11 @@ class ElasticSearchCache(BaseCache):
 
     def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
         body = {
-            "llm_params": llm_string,
             "llm_output": dumps(return_val),
         }
+
+        if self.store_input_param:
+            body["llm_params"] = llm_string
 
         if self.metadata:
             body["metadata"] = self.metadata
