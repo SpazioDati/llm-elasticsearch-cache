@@ -1,6 +1,6 @@
 import hashlib
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 
 import elasticsearch
 from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
@@ -16,7 +16,7 @@ class ElasticSearchCache(BaseCache):
         es_index: str,
         store_input: bool = True,
         store_datetime: bool = True,
-        additional_metadata: Optional[dict] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize the ElasticSearch cache store.
@@ -27,11 +27,11 @@ class ElasticSearchCache(BaseCache):
             es_index: str
                 The name of the index to use for the cache store.
             store_input: bool
-                Whether to store the input in the cache, i.e. the LLM input messages.
+                Whether to store the LLM input in the cache, i.e. the model parameters and the prompt
             store_datetime: bool
-                Whether to store the datetime in the cache, i.e. when the first time the input was used.
-            additional_metadata: Optional[dict]
-                Additional metadata to store in the cache, i.e for filtering.
+                Whether to store the datetime in the cache, i.e. the time of the first request for an input
+            metadata: Optional[dict]
+                Additional metadata to store in the cache, i.e for filtering. Must be JSON serializable.
         """
 
         self._es_client = es_client
@@ -39,16 +39,16 @@ class ElasticSearchCache(BaseCache):
 
         self.store_input = store_input
         self.store_datetime = store_datetime
-        self.additional_metadata = additional_metadata or {}
+        self.metadata = metadata or {}
 
         if not self._es_client.ping():
-            raise ConnectionError(
-                "ElasticSearch is not running, not able to set up the cache store."
+            raise elasticsearch.exceptions.ConnectionError(
+                "ElasticSearch cluster is not available, not able to set up the cache store."
             )
 
         if not self._es_client.indices.exists(index=self.index):
-            raise ConnectionError(
-                f"Index {self.index} does not exist in ElasticSearch."
+            raise elasticsearch.exceptions.ConnectionError(
+                f"ElasticSearch index {self.index} does not exist"
             )
 
     @staticmethod
@@ -73,8 +73,8 @@ class ElasticSearchCache(BaseCache):
             "llm_output": dumps(return_val),
         }
 
-        if self.additional_metadata:
-            body["metadata"] = self.additional_metadata
+        if self.metadata:
+            body["metadata"] = self.metadata
 
         if self.store_input:
             body["llm_input"] = prompt
