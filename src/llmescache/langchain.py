@@ -1,10 +1,10 @@
 import hashlib
 from datetime import datetime
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
 
 import elasticsearch
+from langchain_community.cache import _dumps_generations, _loads_generations
 from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
-from langchain_core.load import dumps
 
 
 class ElasticSearchCache(BaseCache):
@@ -67,20 +67,20 @@ class ElasticSearchCache(BaseCache):
             record = self._es_client.get(
                 index=self.index, id=self._key(prompt, llm_string)
             )
-            return record["_source"]["llm_output"]
+            return _loads_generations(record["_source"]["llm_output"])
         except elasticsearch.exceptions.NotFoundError:
             return None
 
     def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
         body = {
-            "llm_output": dumps(return_val),
+            "llm_output": _dumps_generations(return_val),
         }
 
         if self.store_input_param:
             body["llm_params"] = llm_string
 
         if self.metadata:
-            body["metadata"] = self.metadata
+            body["metadata"] = self.metadata  # type: ignore
 
         if self.store_input:
             body["llm_input"] = prompt
