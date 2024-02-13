@@ -93,4 +93,9 @@ class ElasticSearchCache(BaseCache):
         )
 
     def clear(self, **kwargs: Any) -> None:
-        raise NotImplementedError()
+        self._es_client.delete_by_query(
+            index=self.index,
+            body={"query": {"match_all": {}}},
+            refresh=True,
+            wait_for_completion=True,
+        )
