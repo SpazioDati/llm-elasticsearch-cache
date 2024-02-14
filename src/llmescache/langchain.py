@@ -46,7 +46,7 @@ class ElasticSearchCache(BaseCache):
         self.store_input = store_input
         self.store_timestamp = store_timestamp
         self.store_input_params = store_input_params
-        self.metadata = metadata or {}
+        self.metadata = metadata
 
         if not self._es_client.ping():
             raise elasticsearch.exceptions.ConnectionError(
@@ -101,14 +101,14 @@ class ElasticSearchCache(BaseCache):
         if self.store_input_params:
             body["llm_params"] = llm_string
 
-        if self.metadata:
+        if self.metadata is not None:
             body["metadata"] = self.metadata  # type: ignore
 
         if self.store_input:
             body["llm_input"] = prompt
 
         if self.store_timestamp:
-            body["date"] = datetime.now().isoformat()
+            body["timestamp"] = datetime.now().isoformat()
 
         self._es_client.index(
             index=self.index, id=self._key(prompt, llm_string), body=body

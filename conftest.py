@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
-from elasticsearch import Elasticsearch, exceptions
+from elasticsearch import Elasticsearch
 
 from src.llmescache.langchain import ElasticSearchCache
 
