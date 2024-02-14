@@ -68,7 +68,7 @@ class ElasticSearchCache(BaseCache):
                     "llm_params": {"type": "text"},
                     "llm_input": {"type": "text"},
                     "metadata": {"type": "object"},
-                    "date": {"type": "date"},
+                    "timestamp": {"type": "date"},
                 }
             }
         }
