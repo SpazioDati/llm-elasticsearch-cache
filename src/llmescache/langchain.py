@@ -22,19 +22,26 @@ class ElasticSearchCache(BaseCache):
         """
         Initialize the ElasticSearch cache store.
 
+        This method initializes an object with ElasticSearch caching capabilities.
+        It configures the cache store using an Elasticsearch client, specifying the index
+        to use, and determining what additional information (like input, datetime, input parameters,
+        and any other metadata) should be stored in the cache.
+
         Parameters:
-            es_client: Elasticsearch
-                The Elasticsearch client to use for the cache store.
-            es_index: str
-                The name of the index to use for the cache store.
-            store_input: bool
-                Whether to store the LLM input in the cache, i.e. the input prompt.
-            store_datetime: bool
-                Whether to store the datetime in the cache, i.e. the time of the first request for an input.
-            store_input_param: bool
-                Whether to store the input parameters in the cache, i.e. the parameters used to generate the LLM input.
-            metadata: Optional[dict]
-                Additional metadata to store in the cache, i.e for filtering. Must be JSON serializable.
+            es_client (Elasticsearch): The Elasticsearch client to use for the cache store.
+                This allows the object to communicate with an Elasticsearch server for caching operations.
+            es_index (str): The name of the index to use for the cache store. This specifies
+                where in Elasticsearch the cached data will be stored.
+            store_input (bool): Whether to store the LLM input in the cache, i.e., the input prompt.
+                This determines if the input to the LLM should be cached alongside the output.
+            store_datetime (bool): Whether to store the datetime in the cache, i.e., the time of the
+                first request for an input. This can be useful for tracking when the cache entry was created.
+            store_input_param (bool): Whether to store the input parameters in the cache, i.e., the
+                parameters used to generate the LLM input. This allows for a detailed record of the conditions
+                under which the cached output was generated.
+            metadata (Optional[dict], optional): Additional metadata to store in the cache, for filtering purposes.
+                This must be JSON serializable. It allows for storing extra information that can be used for
+                more nuanced cache retrieval operations.
         """
 
         self._es_client = es_client
@@ -51,18 +58,36 @@ class ElasticSearchCache(BaseCache):
             )
 
         if not self._es_client.indices.exists(index=self.index):
-            raise elasticsearch.exceptions.ConnectionError(
-                f"ElasticSearch index {self.index} does not exist"
+            self._es_client.indices.create(
+                index=self.index, body=self.get_default_mapping
             )
+
+    @property
+    def get_default_mapping(self) -> Dict[str, Any]:
+        """Get the default mapping for the index."""
+        return {
+            "mappings": {
+                "properties": {
+                    "llm_output": {"type": "text"},
+                    "llm_params": {"type": "text"},
+                    "llm_input": {"type": "text"},
+                    "metadata": {"type": "object"},
+                    "date": {"type": "date"},
+                }
+            }
+        }
 
     @staticmethod
     def _key(prompt: str, llm_string: str) -> str:
+        """Generate a key for the cache store."""
+
         def _hash(_input: str) -> str:
             return hashlib.md5(_input.encode()).hexdigest()
 
         return _hash(prompt + llm_string)
 
     def lookup(self, prompt: str, llm_string: str) -> Optional[RETURN_VAL_TYPE]:
+        """Look up based on prompt and llm_string."""
         try:
             record = self._es_client.get(
                 index=self.index, id=self._key(prompt, llm_string)
@@ -72,6 +97,7 @@ class ElasticSearchCache(BaseCache):
             return None
 
     def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
+        """Update based on prompt and llm_string."""
         body = {
             "llm_output": _dumps_generations(return_val),
         }
@@ -93,6 +119,7 @@ class ElasticSearchCache(BaseCache):
         )
 
     def clear(self, **kwargs: Any) -> None:
+        """Clear cache."""
         self._es_client.delete_by_query(
             index=self.index,
             body={"query": {"match_all": {}}},
