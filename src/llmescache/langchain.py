@@ -21,7 +21,7 @@ class ElasticSearchCache(BaseCache):
     ):
         """
         Initialize the ElasticSearch cache store by specifying the index
-        to use and determining what additional information (like input, timestamp, input parameters,
+        to use and determining which additional information (like input, timestamp, input parameters,
         and any other metadata) should be stored in the cache.
 
         Args:
