@@ -2,9 +2,23 @@
 name = "llm-elasticsearch-cache"
 version = "0.1.0"
 description = "A caching layer for LLMs that exploits Elasticsearch, fully compatible with Langchain caching"
-authors = ["Giacomo Berardi <berardi@spaziodati.eu>"]
+authors = ["Giacomo Berardi <berardi@spaziodati.eu>", "Gabriele Ghisleni <gabriele.ghisleni@spaziodati.eu>"]
+license = "MIT"
 readme = "README.md"
-packages = [{include = "llm_elasticsearch_cache"}]
+repository = "https://github.com/SpazioDati/llm-elasticsearch-cache"
+keywords = ["langchain", "elasticsearch", "openai", "llm", "chatgpt"]
+classifiers=[
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
 
 [tool.poetry.dependencies]
 python = "^3.10"
