@@ -62,18 +62,18 @@ class ElasticSearchCache(BaseCache):
                 "properties": {
                     "llm_output": {
                         "type": "text",
-                        "index": "false"
+                        "index": False
                     },
                     "llm_params": {
                         "type": "text",
-                        "index": "false"
+                        "index": False
                     },
                     "llm_input": {
                         "type": "text",
-                        "index": "false"
+                        "index": False
                     },
                     "metadata": {
-                        "dynamic": "true",
+                        "dynamic": True,
                         "type": "object"
                     },
                     "timestamp": {"type": "date"},
