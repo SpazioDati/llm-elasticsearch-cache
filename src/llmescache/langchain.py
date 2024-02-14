@@ -58,11 +58,24 @@ class ElasticSearchCache(BaseCache):
         """Get the default mapping for the index."""
         return {
             "mappings": {
+                "dynamic": "strict",
                 "properties": {
-                    "llm_output": {"type": "text"},
-                    "llm_params": {"type": "text"},
-                    "llm_input": {"type": "text"},
-                    "metadata": {"type": "object"},
+                    "llm_output": {
+                        "type": "text",
+                        "index": "false"
+                    },
+                    "llm_params": {
+                        "type": "text",
+                        "index": "false"
+                    },
+                    "llm_input": {
+                        "type": "text",
+                        "index": "false"
+                    },
+                    "metadata": {
+                        "dynamic": "true",
+                        "type": "object"
+                    },
                     "timestamp": {"type": "date"},
                 }
             }
