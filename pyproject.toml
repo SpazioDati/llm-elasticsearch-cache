@@ -2,7 +2,8 @@
 name = "llm-elasticsearch-cache"
 version = "0.1.0"
 description = "A caching layer for LLMs that exploits Elasticsearch, fully compatible with Langchain caching"
-authors = ["Giacomo Berardi <berardi@spaziodati.eu>", "Gabriele Ghisleni <gabriele.ghisleni@spaziodati.eu>"]
+authors = ["SpazioDati s.r.l. <https://www.spaziodati.eu/>"]
+maintainers = ["Giacomo Berardi <berardi@spaziodati.eu>", "Gabriele Ghisleni <gabriele.ghisleni@spaziodati.eu>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/SpazioDati/llm-elasticsearch-cache"
@@ -19,23 +20,16 @@ classifiers=[
     "Programming Language :: Python :: 3.12",
 ]
 
-
 [tool.poetry.dependencies]
 python = "^3.10"
-langchain = "^0.1.6"
+langchain = "^0.1.7"
 elasticsearch = "^8.12.0"
-
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
 pre-commit = "^3.6.1"
-black = "^24.1.1"
-isort = "^5.13.2"
 mypy = "^1.8.0"
-flake8 = "^7.0.0"
-
-[tool.isort]
-profile = "black"
+ruff = "^0.2.1"
 
 [build-system]
 requires = ["poetry-core"]
