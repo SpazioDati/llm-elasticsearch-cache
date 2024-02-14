@@ -15,8 +15,8 @@ class ElasticSearchCache(BaseCache):
         es_client: elasticsearch.Elasticsearch,
         es_index: str,
         store_input: bool = True,
-        store_datetime: bool = True,
-        store_input_param: bool = True,
+        store_timestamp: bool = True,
+        store_input_params: bool = True,
         metadata: Optional[Dict[str, Any]] = None,
     ):
         """
@@ -32,9 +32,9 @@ class ElasticSearchCache(BaseCache):
             es_index (str): The name of the index to use for the cache store.
             store_input (bool): Whether to store the LLM input in the cache, i.e., the input prompt.
                 Defaults to True.
-            store_datetime (bool): Whether to store the datetime in the cache, i.e., the time of the
+            store_timestamp (bool): Whether to store the datetime in the cache, i.e., the time of the
                 first request for an input. Defaults to True.
-            store_input_param (bool): Whether to store the input parameters in the cache, i.e., the
+            store_input_params (bool): Whether to store the input parameters in the cache, i.e., the
                 parameters used to generate the LLM input. Defaults to True.
             metadata (Optional[dict], optional): Additional metadata to store in the cache, for filtering purposes.
                 This must be JSON serializable. Defaults to None.
@@ -44,8 +44,8 @@ class ElasticSearchCache(BaseCache):
         self.index = es_index
 
         self.store_input = store_input
-        self.store_datetime = store_datetime
-        self.store_input_param = store_input_param
+        self.store_timestamp = store_timestamp
+        self.store_input_params = store_input_params
         self.metadata = metadata or {}
 
         if not self._es_client.ping():
@@ -98,7 +98,7 @@ class ElasticSearchCache(BaseCache):
             "llm_output": _dumps_generations(return_val),
         }
 
-        if self.store_input_param:
+        if self.store_input_params:
             body["llm_params"] = llm_string
 
         if self.metadata:
@@ -107,7 +107,7 @@ class ElasticSearchCache(BaseCache):
         if self.store_input:
             body["llm_input"] = prompt
 
-        if self.store_datetime:
+        if self.store_timestamp:
             body["date"] = datetime.now().isoformat()
 
         self._es_client.index(
