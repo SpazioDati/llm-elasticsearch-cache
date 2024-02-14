@@ -27,21 +27,17 @@ class ElasticSearchCache(BaseCache):
         to use, and determining what additional information (like input, datetime, input parameters,
         and any other metadata) should be stored in the cache.
 
-        Parameters:
+        Args:
             es_client (Elasticsearch): The Elasticsearch client to use for the cache store.
-                This allows the object to communicate with an Elasticsearch server for caching operations.
-            es_index (str): The name of the index to use for the cache store. This specifies
-                where in Elasticsearch the cached data will be stored.
+            es_index (str): The name of the index to use for the cache store.
             store_input (bool): Whether to store the LLM input in the cache, i.e., the input prompt.
-                This determines if the input to the LLM should be cached alongside the output.
+                Defaults to True.
             store_datetime (bool): Whether to store the datetime in the cache, i.e., the time of the
-                first request for an input. This can be useful for tracking when the cache entry was created.
+                first request for an input. Defaults to True.
             store_input_param (bool): Whether to store the input parameters in the cache, i.e., the
-                parameters used to generate the LLM input. This allows for a detailed record of the conditions
-                under which the cached output was generated.
+                parameters used to generate the LLM input. Defaults to True.
             metadata (Optional[dict], optional): Additional metadata to store in the cache, for filtering purposes.
-                This must be JSON serializable. It allows for storing extra information that can be used for
-                more nuanced cache retrieval operations.
+                This must be JSON serializable. Defaults to None.
         """
 
         self._es_client = es_client
