@@ -23,3 +23,7 @@ from elasticsearch import Elasticsearch
 es_client = Elasticsearch(hosts="localhost:9200")
 set_llm_cache(ElasticsearchCache(es_client=es_client, es_index="llm-langchain-cache"))
 ```
+
+The `es_index` parameter can also take aliases. This allows to use the 
+[ILM: Manage the index lifecycle](https://www.elastic.co/guide/en/elasticsearch/reference/current/index-lifecycle-management.html)
+that we suggest to consider for managing retention and controlling cache growth.
