@@ -1,10 +1,17 @@
 repos:
   - repo: local
     hooks:
-      - id: ruff
-        name: Ruff
-        entry: poetry run ruff
+      - id: ruff-check
+        name: Ruff Linter
+        entry: poetry run ruff check
         args: ["src"]
+        pass_filenames: false
+        language: system
+        types: [ python ]
+      - id: ruff-format
+        name: Ruff Formatter
+        entry: poetry run ruff format
+        args: [ "src" ]
         pass_filenames: false
         language: system
         types: [ python ]
