@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from elasticsearch import Elasticsearch
 
-from llmescache.langchain import ElasticSearchCache
+from llmescache.langchain import ElasticsearchCache
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def es_client_mock():
 
 @pytest.fixture
 def cache(es_client_mock):
-    yield ElasticSearchCache(
+    yield ElasticsearchCache(
         es_client=es_client_mock,
         es_index="test_index",
         store_input=True,

@@ -3,19 +3,19 @@ import pytest
 from elasticsearch import exceptions
 
 
-from llmescache.langchain import ElasticSearchCache
+from llmescache.langchain import ElasticsearchCache
 
 
 def test_initialization_failure(es_client_mock):
     es_client_mock.ping.return_value = False
     with pytest.raises(exceptions.ConnectionError):
-        ElasticSearchCache(es_client=es_client_mock, es_index="test_index")
+        ElasticsearchCache(es_client=es_client_mock, es_index="test_index")
 
 
 def test_initialization_success(es_client_mock):
     es_client_mock.ping.return_value = True
     es_client_mock.indices.exists.return_value = False
-    cache = ElasticSearchCache(es_client=es_client_mock, es_index="test_index")  # noqa
+    cache = ElasticsearchCache(es_client=es_client_mock, es_index="test_index")  # noqa
     es_client_mock.indices.create.assert_called_once()
 
 
