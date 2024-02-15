@@ -1,5 +1,6 @@
 import hashlib
 from datetime import datetime
+from operator import itemgetter
 from typing import Any, Optional, Mapping, Dict
 
 import elasticsearch
@@ -26,8 +27,8 @@ class ElasticsearchCache(BaseCache):
 
         Args:
             es_client (Elasticsearch): The Elasticsearch client to use for the cache store.
-            es_index (str): The name of the index to use for the cache store. It will be created if it does not exist
-                according to the default mapping defined by `mapping` property.
+            es_index (str): The name of the index or the alia to use for the cache store.
+            An index be created if they do not exist according to the default mapping defined by `mapping` property.
             store_input (bool): Whether to store the LLM input in the cache, i.e., the input prompt. Default to True.
             store_timestamp (bool): Whether to store the datetime in the cache, i.e., the time of the
                 first request for a LLM input. Default to True.
@@ -39,21 +40,20 @@ class ElasticsearchCache(BaseCache):
 
         self._es_client = es_client
         self._es_index = es_index
-
         self._store_input = store_input
         self._store_timestamp = store_timestamp
         self._store_input_params = store_input_params
         self._metadata = metadata
-
         if not self._es_client.ping():
             raise elasticsearch.exceptions.ConnectionError(
                 "Elasticsearch cluster is not available, not able to set up the cache store."
             )
-
-        if not self._es_client.indices.exists(index=self._es_index):
-            self._es_client.indices.create(index=self._es_index, body=self.mapping)
-        else:
-            self._es_client.indices.put_mapping(index=self._es_index, body=self.mapping)
+        self._is_alias = False
+        if self._es_client.indices.exists_alias(name=self._es_index):
+            self._is_alias = True
+        elif not self._es_client.indices.exists(index=self._es_index):
+            self._es_client.indices.create(index=self._es_index)
+        self._es_client.indices.put_mapping(index=self._es_index, body=self.mapping)
 
     @property
     def mapping(self) -> Dict[str, Any]:
@@ -77,13 +77,26 @@ class ElasticsearchCache(BaseCache):
 
     def lookup(self, prompt: str, llm_string: str) -> Optional[RETURN_VAL_TYPE]:
         """Look up based on prompt and llm_string."""
-        try:
-            record = self._es_client.get(
-                index=self._es_index, id=self._key(prompt, llm_string)
+        cache_key = self._key(prompt, llm_string)
+        if self._is_alias:
+            result = self._es_client.search(
+                index=self._es_index,
+                body={"query": {"term": {"_id": cache_key}}},
+                source_includes=["llm_output"],
             )
-            return _loads_generations(record["_source"]["llm_output"])
-        except elasticsearch.exceptions.NotFoundError:
-            return None
+            if result["hits"]["total"]["value"] > 0:
+                # get the record from the latest index, assuming lexicographic order is chronological
+                record = max(result["hits"]["hits"], key=itemgetter("_index"))
+            else:
+                return None
+        else:
+            try:
+                record = self._es_client.get(
+                    index=self._es_index, id=cache_key, source=["llm_output"]
+                )
+            except elasticsearch.exceptions.NotFoundError:
+                return None
+        return _loads_generations(record["_source"]["llm_output"])
 
     def build_document(
         self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE
