@@ -52,13 +52,14 @@ class ElasticsearchCache(BaseCache):
 
         if not self._es_client.indices.exists(index=self._es_index):
             self._es_client.indices.create(index=self._es_index, body=self.mapping)
+        else:
+            self._es_client.indices.put_mapping(index=self._es_index, body=self.mapping)
 
     @property
     def mapping(self) -> Dict[str, Any]:
         """Get the default mapping for the index."""
         return {
             "mappings": {
-                "dynamic": "strict",
                 "properties": {
                     "llm_output": {
                         "type": "text",
@@ -73,7 +74,6 @@ class ElasticsearchCache(BaseCache):
                         "index": False
                     },
                     "metadata": {
-                        "dynamic": True,
                         "type": "object"
                     },
                     "timestamp": {"type": "date"},
