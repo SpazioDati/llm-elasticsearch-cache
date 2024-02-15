@@ -1,6 +1,6 @@
 import hashlib
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Optional, Mapping, Dict
 
 import elasticsearch
 from langchain_community.cache import _dumps_generations, _loads_generations
@@ -17,7 +17,7 @@ class ElasticsearchCache(BaseCache):
         store_input: bool = True,
         store_timestamp: bool = True,
         store_input_params: bool = True,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Mapping[str, Any]] = None,
     ):
         """
         Initialize the Elasticsearch cache store by specifying the index
@@ -85,24 +85,26 @@ class ElasticsearchCache(BaseCache):
         except elasticsearch.exceptions.NotFoundError:
             return None
 
-    def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
-        """Update based on prompt and llm_string."""
-        body = {
+    def build_document(
+        self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE
+    ) -> Mapping[str, Any]:
+        """Build the Elasticsearch document for storing a single LLM interaction"""
+        body: Dict[str, Any] = {
             "llm_output": _dumps_generations(return_val),
         }
-
         if self._store_input_params:
             body["llm_params"] = llm_string
-
         if self._metadata is not None:
-            body["metadata"] = self.metadata  # type: ignore
-
+            body["metadata"] = self._metadata
         if self._store_input:
             body["llm_input"] = prompt
-
         if self._store_timestamp:
             body["timestamp"] = datetime.now().isoformat()
+        return body
 
+    def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
+        """Update based on prompt and llm_string."""
+        body = self.build_document(prompt, llm_string, return_val)
         self._es_client.index(
             index=self._es_index, id=self._key(prompt, llm_string), body=body
         )
