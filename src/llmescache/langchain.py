@@ -7,8 +7,8 @@ from langchain_community.cache import _dumps_generations, _loads_generations
 from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
 
 
-class ElasticSearchCache(BaseCache):
-    """Cache store for LLM using ElasticSearch."""
+class ElasticsearchCache(BaseCache):
+    """Cache store for LLM using Elasticsearch."""
 
     def __init__(
         self,
@@ -20,7 +20,7 @@ class ElasticSearchCache(BaseCache):
         metadata: Optional[Dict[str, Any]] = None,
     ):
         """
-        Initialize the ElasticSearch cache store by specifying the index
+        Initialize the Elasticsearch cache store by specifying the index
         to use and determining which additional information (like input, timestamp, input parameters,
         and any other metadata) should be stored in the cache.
 
@@ -34,7 +34,7 @@ class ElasticSearchCache(BaseCache):
             store_input_params (bool): Whether to store the input parameters in the cache, i.e., the LLM
                 parameters used to generate the LLM response. Default to True.
             metadata (Optional[dict], optional): Additional metadata to store in the cache, for filtering purposes.
-                This must be JSON serializable in an ElasticSearch document. Default to None.
+                This must be JSON serializable in an Elasticsearch document. Default to None.
         """
 
         self._es_client = es_client
@@ -47,7 +47,7 @@ class ElasticSearchCache(BaseCache):
 
         if not self._es_client.ping():
             raise elasticsearch.exceptions.ConnectionError(
-                "ElasticSearch cluster is not available, not able to set up the cache store."
+                "Elasticsearch cluster is not available, not able to set up the cache store."
             )
 
         if not self._es_client.indices.exists(index=self._es_index):
