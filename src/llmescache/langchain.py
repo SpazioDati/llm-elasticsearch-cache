@@ -61,21 +61,10 @@ class ElasticsearchCache(BaseCache):
         return {
             "mappings": {
                 "properties": {
-                    "llm_output": {
-                        "type": "text",
-                        "index": False
-                    },
-                    "llm_params": {
-                        "type": "text",
-                        "index": False
-                    },
-                    "llm_input": {
-                        "type": "text",
-                        "index": False
-                    },
-                    "metadata": {
-                        "type": "object"
-                    },
+                    "llm_output": {"type": "text", "index": False},
+                    "llm_params": {"type": "text", "index": False},
+                    "llm_input": {"type": "text", "index": False},
+                    "metadata": {"type": "object"},
                     "timestamp": {"type": "date"},
                 }
             }
