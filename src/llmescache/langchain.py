@@ -21,14 +21,14 @@ class ElasticsearchCache(BaseCache):
         metadata: Optional[Mapping[str, Any]] = None,
     ):
         """
-        Initialize the Elasticsearch cache store by specifying the index
+        Initialize the Elasticsearch cache store by specifying the index/alias
         to use and determining which additional information (like input, timestamp, input parameters,
         and any other metadata) should be stored in the cache.
 
         Args:
             es_client (Elasticsearch): The Elasticsearch client to use for the cache store.
-            es_index (str): The name of the index or the alia to use for the cache store.
-            An index be created if they do not exist according to the default mapping defined by `mapping` property.
+            es_index (str): The name of the index or the alias to use for the cache store.
+            If they do not exist an index is created, according to the default mapping defined by `mapping` property.
             store_input (bool): Whether to store the LLM input in the cache, i.e., the input prompt. Default to True.
             store_timestamp (bool): Whether to store the datetime in the cache, i.e., the time of the
                 first request for a LLM input. Default to True.
@@ -44,6 +44,9 @@ class ElasticsearchCache(BaseCache):
         self._store_timestamp = store_timestamp
         self._store_input_params = store_input_params
         self._metadata = metadata
+        self._manage_index()
+
+    def _manage_index(self):
         if not self._es_client.ping():
             raise elasticsearch.exceptions.ConnectionError(
                 "Elasticsearch cluster is not available, not able to set up the cache store."
@@ -52,7 +55,8 @@ class ElasticsearchCache(BaseCache):
         if self._es_client.indices.exists_alias(name=self._es_index):
             self._is_alias = True
         elif not self._es_client.indices.exists(index=self._es_index):
-            self._es_client.indices.create(index=self._es_index)
+            self._es_client.indices.create(index=self._es_index, body=self.mapping)
+            return
         self._es_client.indices.put_mapping(index=self._es_index, body=self.mapping)
 
     @property
