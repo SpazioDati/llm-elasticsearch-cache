@@ -57,7 +57,9 @@ class ElasticsearchCache(BaseCache):
         elif not self._es_client.indices.exists(index=self._es_index):
             self._es_client.indices.create(index=self._es_index, body=self.mapping)
             return
-        self._es_client.indices.put_mapping(index=self._es_index, body=self.mapping)
+        self._es_client.indices.put_mapping(
+            index=self._es_index, body=self.mapping["mappings"]
+        )
 
     @property
     def mapping(self) -> Dict[str, Any]:

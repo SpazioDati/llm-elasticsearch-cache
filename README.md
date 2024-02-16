@@ -20,7 +20,7 @@ from langchain.globals import set_llm_cache
 from llmescache.langchain import ElasticsearchCache
 from elasticsearch import Elasticsearch
 
-es_client = Elasticsearch(hosts="localhost:9200")
+es_client = Elasticsearch(hosts="http://localhost:9200")
 set_llm_cache(ElasticsearchCache(es_client=es_client, es_index="llm-langchain-cache"))
 ```
 
@@ -60,10 +60,10 @@ class SearchableElasticsearchCache(ElasticsearchCache):
 
 
 # let's re-use an existing cache index
-es_client = Elasticsearch(hosts="localhost:9200")
+es_client = Elasticsearch(hosts="http://localhost:9200")
 es_client.indices.put_mapping(
     index="llm-langchain-cache", 
-    properties={"parsed_llm_output": {"type": "text", "analyzer": "english"}}
+    body={"properties": {"parsed_llm_output": {"type": "text", "analyzer": "english"}}}
 )
 set_llm_cache(SearchableElasticsearchCache(es_client=es_client, es_index="llm-langchain-cache"))
 ```
