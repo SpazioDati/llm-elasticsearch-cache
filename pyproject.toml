@@ -2,7 +2,7 @@
 name = "llm-elasticsearch-cache"
 version = "0.1.0"
 description = "A caching layer for LLMs that exploits Elasticsearch, fully compatible with Langchain caching"
-packages = [{include = "llmescache", from = "src"}]
+packages = [{include = "llmescache", from = "./src"}]
 authors = ["SpazioDati s.r.l. <https://www.spaziodati.eu/>"]
 maintainers = ["Giacomo Berardi <berardi@spaziodati.eu>", "Gabriele Ghisleni <gabriele.ghisleni@spaziodati.eu>"]
 license = "MIT"
@@ -31,9 +31,6 @@ pytest = "^8.0.0"
 pre-commit = "^3.6.1"
 mypy = "^1.8.0"
 ruff = "^0.2.1"
-
-[tool.pytest.ini_options]
-pythonpath = "src"
 
 [build-system]
 requires = ["poetry-core"]
