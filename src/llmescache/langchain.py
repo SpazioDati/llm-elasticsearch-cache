@@ -1,11 +1,11 @@
 import hashlib
 from datetime import datetime
 from operator import itemgetter
-from typing import Any, Optional, Mapping, Dict
+from typing import Any, Optional, Dict
 
 import elasticsearch
-from langchain_community.cache import _dumps_generations, _loads_generations
 from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
+from langchain_core.load import dumps, loads
 
 
 class ElasticsearchCache(BaseCache):
@@ -18,7 +18,7 @@ class ElasticsearchCache(BaseCache):
         store_input: bool = True,
         store_timestamp: bool = True,
         store_input_params: bool = True,
-        metadata: Optional[Mapping[str, Any]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize the Elasticsearch cache store by specifying the index/alias
@@ -100,14 +100,14 @@ class ElasticsearchCache(BaseCache):
                 )
             except elasticsearch.exceptions.NotFoundError:
                 return None
-        return _loads_generations(record["_source"]["llm_output"])
+        return [loads(item) for item in record["_source"]["llm_output"]]
 
     def build_document(
         self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE
-    ) -> Mapping[str, Any]:
+    ) -> Dict[str, Any]:
         """Build the Elasticsearch document for storing a single LLM interaction"""
         body: Dict[str, Any] = {
-            "llm_output": _dumps_generations(return_val),
+            "llm_output": [dumps(item) for item in return_val],
         }
         if self._store_input_params:
             body["llm_params"] = llm_string
