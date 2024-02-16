@@ -15,8 +15,8 @@ def test_initialization_failure(es_client_mock):
 def test_initialization_success(es_client_mock):
     es_client_mock.ping.return_value = True
     es_client_mock.indices.exists.return_value = False
-    cache = ElasticsearchCache(es_client=es_client_mock, es_index="test_index")  # noqa
-    es_client_mock.indices.create.assert_called_once()
+    ElasticsearchCache(es_client=es_client_mock, es_index="test_index")
+    es_client_mock.indices.put_mapping.assert_called_once()
 
 
 def test_key_generation(cache):
