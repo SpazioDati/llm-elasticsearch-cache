@@ -1,8 +1,5 @@
 import pytest
-
 from elasticsearch import exceptions
-
-
 from llmescache.langchain import ElasticsearchCache
 
 

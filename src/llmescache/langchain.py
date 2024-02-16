@@ -2,7 +2,6 @@ import hashlib
 from datetime import datetime
 from operator import itemgetter
 from typing import Any, Optional, Dict
-
 import elasticsearch
 from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
 from langchain_core.load import dumps, loads
