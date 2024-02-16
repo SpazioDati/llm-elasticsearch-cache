@@ -1,6 +1,6 @@
 # llm-elasticsearch-cache
 
-A caching layer for LLMs that exploits Elasticsearch, fully compatible with Langchain caching.
+A caching layer for LLMs that exploits Elasticsearch, fully compatible with LangChain caching.
 
 ## Install
 
@@ -10,7 +10,7 @@ pip install llm-elasticsearch-cache
 
 ## Usage
 
-The Langchain cache can be used similarly to the
+The LangChain cache can be used similarly to the
 [other cache integrations](https://python.langchain.com/docs/integrations/llms/llm_caching).
 
 ### Basic example
