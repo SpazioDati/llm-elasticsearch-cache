@@ -33,10 +33,9 @@ class ElasticsearchCache(BaseCache):
                 first request for a LLM input. Default to True.
             store_input_params (bool): Whether to store the input parameters in the cache, i.e., the LLM
                 parameters used to generate the LLM response. Default to True.
-            metadata (Optional[dict], optional): Additional metadata to store in the cache, for filtering purposes.
+            metadata (Optional[dict]): Additional metadata to store in the cache, for filtering purposes.
                 This must be JSON serializable in an Elasticsearch document. Default to None.
         """
-
         self._es_client = es_client
         self._es_index = es_index
         self._store_input = store_input
