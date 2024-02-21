@@ -6,8 +6,10 @@ import elasticsearch
 from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
 from langchain_core.load import dumps, loads
 
+from llmescache.langchain.base import ElasticsearchIndexer
 
-class ElasticsearchCache(BaseCache):
+
+class ElasticsearchCache(BaseCache, ElasticsearchIndexer):
     """Cache store for LLM using Elasticsearch."""
 
     def __init__(
@@ -43,21 +45,6 @@ class ElasticsearchCache(BaseCache):
         self._store_input_params = store_input_params
         self._metadata = metadata
         self._manage_index()
-
-    def _manage_index(self):
-        if not self._es_client.ping():
-            raise elasticsearch.exceptions.ConnectionError(
-                "Elasticsearch cluster is not available, not able to set up the cache store."
-            )
-        self._is_alias = False
-        if self._es_client.indices.exists_alias(name=self._es_index):
-            self._is_alias = True
-        elif not self._es_client.indices.exists(index=self._es_index):
-            self._es_client.indices.create(index=self._es_index, body=self.mapping)
-            return
-        self._es_client.indices.put_mapping(
-            index=self._es_index, body=self.mapping["mappings"]
-        )
 
     @property
     def mapping(self) -> Dict[str, Any]:

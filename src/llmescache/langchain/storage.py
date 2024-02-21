@@ -7,8 +7,10 @@ import elasticsearch
 from elasticsearch import helpers
 from langchain_core.stores import BaseStore
 
+from llmescache.langchain.base import ElasticsearchIndexer
 
-class ElasticsearchStore(BaseStore[str, List[float]]):
+
+class ElasticsearchStore(BaseStore[str, List[float]], ElasticsearchIndexer):
     def __init__(
         self,
         es_client: elasticsearch.Elasticsearch,
@@ -41,21 +43,6 @@ class ElasticsearchStore(BaseStore[str, List[float]]):
         self._namespace = namespace
         self._metadata = metadata
         self._manage_index()
-
-    def _manage_index(self):
-        if not self._es_client.ping():
-            raise elasticsearch.exceptions.ConnectionError(
-                "Elasticsearch cluster is not available, not able to set up the cache store."
-            )
-        self._is_alias = False
-        if self._es_client.indices.exists_alias(name=self._es_index):
-            self._is_alias = True
-        elif not self._es_client.indices.exists(index=self._es_index):
-            self._es_client.indices.create(index=self._es_index, body=self.mapping)
-            return
-        self._es_client.indices.put_mapping(
-            index=self._es_index, body=self.mapping["mappings"]
-        )
 
     @property
     def mapping(self) -> Dict[str, Any]:
