@@ -123,7 +123,11 @@ class ElasticsearchCache(BaseCache):
         """Update based on prompt and llm_string."""
         body = self.build_document(prompt, llm_string, return_val)
         self._es_client.index(
-            index=self._es_index, id=self._key(prompt, llm_string), body=body
+            index=self._es_index,
+            id=self._key(prompt, llm_string),
+            body=body,
+            require_alias=self._is_alias,
+            refresh=True,
         )
 
     def clear(self, **kwargs: Any) -> None:
