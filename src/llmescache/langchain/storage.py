@@ -1,7 +1,10 @@
 import hashlib
-from typing import List, Optional, Iterator, Sequence, Tuple, Any, Dict
+import json
+from datetime import datetime
+from typing import List, Optional, Iterator, Sequence, Tuple, Any, Dict, Iterable
 
 import elasticsearch
+from elasticsearch import helpers
 from langchain_core.stores import BaseStore
 
 
@@ -60,10 +63,7 @@ class ElasticsearchStore(BaseStore[str, List[float]]):
         return {
             "mappings": {
                 "properties": {
-                    "llm_input": {
-                        "type": "text",
-                        "index_prefixes": {"min_chars": 1, "max_chars": 10},
-                    },
+                    "llm_input": {"type": "text", "index": False},
                     "vector_dump": {"type": "keyword", "index": False},
                     "metadata": {"type": "object"},
                     "timestamp": {"type": "date"},
@@ -71,23 +71,76 @@ class ElasticsearchStore(BaseStore[str, List[float]]):
             }
         }
 
-    @staticmethod
-    def _key(namespace: str, input_text: str) -> str:
+    def _key(self, input_text: str) -> str:
         """Generate a key for the store."""
-        return hashlib.md5((namespace + input_text).encode()).hexdigest()
+        return hashlib.md5((self._namespace or "" + input_text).encode()).hexdigest()
 
     def mget(self, keys: Sequence[str]) -> List[Optional[List[float]]]:
         """Get the values associated with the given keys."""
-        return []
+        cache_keys = [self._key(k) for k in keys]
+        if self._is_alias:
+            results = self._es_client.search(
+                index=self._es_index,
+                body={
+                    "query": {"ids": {"values": cache_keys}},
+                    "size": len(cache_keys),
+                },
+                source_includes=["vector_dump"],
+            )
+            map_ids = {
+                r["_id"]: json.loads(r["_source"]["vector_dump"])
+                for r in results["hits"]["hits"]
+            }
+            return [map_ids.get(k) for k in cache_keys]
+        else:
+            records = self._es_client.mget(
+                index=self._es_index, ids=cache_keys, source_includes=["vector_dump"]
+            )
+            return [
+                json.loads(r["_source"]["vector_dump"]) if r["found"] else None
+                for r in records["docs"]
+            ]
+
+    def build_document(self, llm_input: str, vector: List[float]) -> Dict[str, Any]:
+        """Build the Elasticsearch document for storing a single embedding"""
+        body: Dict[str, Any] = {"vector_dump": json.dumps(vector)}
+        if self._metadata is not None:
+            body["metadata"] = self._metadata
+        if self._store_input:
+            body["llm_input"] = llm_input
+        if self._store_timestamp:
+            body["timestamp"] = datetime.now().isoformat()
+        return body
+
+    def _bulk(self, actions: Iterable[Dict[str, Any]]):
+        helpers.bulk(
+            client=self._es_client,
+            actions=actions,
+            index=self._es_index,
+            require_alias=self._is_alias,
+            refresh=True,
+        )
 
     def mset(self, key_value_pairs: Sequence[Tuple[str, List[float]]]) -> None:
         """Set the values for the given keys."""
+        bodies = {
+            self._key(pair[0]): self.build_document(*pair) for pair in key_value_pairs
+        }
+        actions = (
+            {"_op_type": "index", "_id": key, "_source": doc}
+            for key, doc in bodies.items()
+        )
+        self._bulk(actions)
         return
 
     def mdelete(self, keys: Sequence[str]) -> None:
         """Delete the given keys and their associated values."""
+        actions = ({"_op_type": "delete", "_id": self._key(key)} for key in keys)
+        self._bulk(actions)
         return
 
     def yield_keys(self, *, prefix: Optional[str] = None) -> Iterator[str]:
         """Get an iterator over keys that match the given prefix."""
-        yield ""
+        # TODO This method is not currently used by CacheBackedEmbeddings, we can leave it blank.
+        #      It could be implemented with ES "index_prefixes", but they are limited and expensive.
+        raise NotImplementedError()
