@@ -1,10 +1,11 @@
 import hashlib
-import json
+import logging
 from datetime import datetime
 from typing import List, Optional, Iterator, Sequence, Tuple, Any, Dict, Iterable
 
 import elasticsearch
 from elasticsearch import helpers
+from elasticsearch.helpers import BulkIndexError
 from langchain_core.stores import BaseStore
 
 from llmescache.langchain.base import ElasticsearchIndexer
@@ -42,6 +43,7 @@ class ElasticsearchStore(BaseStore[str, List[float]], ElasticsearchIndexer):
         self._store_timestamp = store_timestamp
         self._namespace = namespace
         self._metadata = metadata
+        self._logger = logging.getLogger(self.__class__.__name__)
         self._manage_index()
 
     @property
@@ -51,7 +53,11 @@ class ElasticsearchStore(BaseStore[str, List[float]], ElasticsearchIndexer):
             "mappings": {
                 "properties": {
                     "llm_input": {"type": "text", "index": False},
-                    "vector_dump": {"type": "keyword", "index": False},
+                    "vector_dump": {
+                        "type": "float",
+                        "index": False,
+                        "doc_values": False,
+                    },
                     "metadata": {"type": "object"},
                     "timestamp": {"type": "date"},
                 }
@@ -60,7 +66,7 @@ class ElasticsearchStore(BaseStore[str, List[float]], ElasticsearchIndexer):
 
     def _key(self, input_text: str) -> str:
         """Generate a key for the store."""
-        return hashlib.md5((self._namespace or "" + input_text).encode()).hexdigest()
+        return hashlib.md5(((self._namespace or "") + input_text).encode()).hexdigest()
 
     def mget(self, keys: Sequence[str]) -> List[Optional[List[float]]]:
         """Get the values associated with the given keys."""
@@ -75,8 +81,7 @@ class ElasticsearchStore(BaseStore[str, List[float]], ElasticsearchIndexer):
                 source_includes=["vector_dump"],
             )
             map_ids = {
-                r["_id"]: json.loads(r["_source"]["vector_dump"])
-                for r in results["hits"]["hits"]
+                r["_id"]: r["_source"]["vector_dump"] for r in results["hits"]["hits"]
             }
             return [map_ids.get(k) for k in cache_keys]
         else:
@@ -84,13 +89,13 @@ class ElasticsearchStore(BaseStore[str, List[float]], ElasticsearchIndexer):
                 index=self._es_index, ids=cache_keys, source_includes=["vector_dump"]
             )
             return [
-                json.loads(r["_source"]["vector_dump"]) if r["found"] else None
+                r["_source"]["vector_dump"] if r["found"] else None
                 for r in records["docs"]
             ]
 
     def build_document(self, llm_input: str, vector: List[float]) -> Dict[str, Any]:
         """Build the Elasticsearch document for storing a single embedding"""
-        body: Dict[str, Any] = {"vector_dump": json.dumps(vector)}
+        body: Dict[str, Any] = {"vector_dump": vector}
         if self._metadata is not None:
             body["metadata"] = self._metadata
         if self._store_input:
@@ -100,22 +105,28 @@ class ElasticsearchStore(BaseStore[str, List[float]], ElasticsearchIndexer):
         return body
 
     def _bulk(self, actions: Iterable[Dict[str, Any]]):
-        helpers.bulk(
-            client=self._es_client,
-            actions=actions,
-            index=self._es_index,
-            require_alias=self._is_alias,
-            refresh=True,
-        )
+        try:
+            helpers.bulk(
+                client=self._es_client,
+                actions=actions,
+                index=self._es_index,
+                require_alias=self._is_alias,
+                refresh=True,
+            )
+        except BulkIndexError as e:
+            first_error = e.errors[0].get("index", {}).get("error", {})
+            self._logger.error(f"First bulk error reason: {first_error.get('reason')}")
+            raise e
 
     def mset(self, key_value_pairs: Sequence[Tuple[str, List[float]]]) -> None:
         """Set the values for the given keys."""
-        bodies = {
-            self._key(pair[0]): self.build_document(*pair) for pair in key_value_pairs
-        }
         actions = (
-            {"_op_type": "index", "_id": key, "_source": doc}
-            for key, doc in bodies.items()
+            {
+                "_op_type": "index",
+                "_id": self._key(key),
+                "_source": self.build_document(key, vector),
+            }
+            for key, vector in key_value_pairs
         )
         self._bulk(actions)
         return
