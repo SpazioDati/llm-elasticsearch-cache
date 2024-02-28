@@ -121,3 +121,8 @@ class SearchableElasticsearchStore(ElasticsearchStore):
         body["vector"] = vector
         return body
 ```
+
+Be aware that `CacheBackedEmbeddings` does 
+[not currently support caching queries](https://api.python.langchain.com/en/latest/embeddings/langchain.embeddings.cache.CacheBackedEmbeddings.html#langchain.embeddings.cache.CacheBackedEmbeddings.embed_query),
+this means that text queries, for vector searches, won't be cached.
+However, by overriding the `embed_query` method one should be able to easily implement it.
