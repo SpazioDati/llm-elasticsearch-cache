@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "llm-elasticsearch-cache"
-version = "0.1.2"
-description = "A caching layer for LLMs that exploits Elasticsearch, fully compatible with LangChain caching."
+version = "0.2.0"
+description = "A caching layer for LLMs that exploits Elasticsearch, fully compatible with LangChain caching, both for chat and embeddings models."
 packages = [{include = "llmescache", from = "./src"}]
 authors = ["SpazioDati s.r.l."]
 maintainers = ["Giacomo Berardi <berardi@spaziodati.eu>", "Gabriele Ghisleni <gabriele.ghisleni@spaziodati.eu>"]
