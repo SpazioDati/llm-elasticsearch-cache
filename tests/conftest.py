@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import MagicMock
 from elasticsearch import Elasticsearch
 from elasticsearch._sync.client import IndicesClient
+from langchain_community.chat_models.fake import FakeMessagesListChatModel
+from langchain_core.messages import AIMessage
 
 from llmescache.langchain import ElasticsearchCache
 
@@ -21,5 +23,12 @@ def es_cache_fx(es_client_fx):
         store_input=True,
         store_timestamp=True,
         store_input_params=True,
-        metadata={"project": "test"}
+        metadata={"project": "test"},
+    )
+
+
+@pytest.fixture
+def fake_chat_fx():
+    yield FakeMessagesListChatModel(
+        cache=True, responses=[AIMessage(content="test output")]
     )
