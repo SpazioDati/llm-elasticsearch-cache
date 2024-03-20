@@ -4,14 +4,14 @@ repos:
       - id: ruff-check
         name: Ruff Linter
         entry: poetry run ruff check
-        args: ["src"]
+        args: ["src", "tests"]
         pass_filenames: false
         language: system
         types: [ python ]
       - id: ruff-format
         name: Ruff Formatter
         entry: poetry run ruff format
-        args: [ "src" ]
+        args: ["src", "tests"]
         pass_filenames: false
         language: system
         types: [ python ]
@@ -20,7 +20,7 @@ repos:
       - id: mypy
         name: Mypy
         entry: poetry run mypy
-        args: ["src"]
+        args: ["src", "tests"]
         language: system
         pass_filenames: false
         types: [python]
