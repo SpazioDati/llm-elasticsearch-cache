@@ -24,7 +24,7 @@ classifiers=[
 [tool.poetry.dependencies]
 python = "^3.10"
 langchain = "^0.1"
-elasticsearch = "^8"
+elasticsearch = ">6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8"

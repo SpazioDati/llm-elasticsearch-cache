@@ -6,6 +6,8 @@ from elasticsearch import Elasticsearch
 
 
 class ElasticsearchIndexer:
+    """Mixin for Elasticsearch clients"""
+
     _es_client: Elasticsearch
     _es_index: str
 
