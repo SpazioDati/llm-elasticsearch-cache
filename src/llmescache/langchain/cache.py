@@ -1,8 +1,10 @@
 import hashlib
 from datetime import datetime
+from functools import cached_property
 from operator import itemgetter
 from typing import Any, Optional, Dict
 import elasticsearch
+from elasticsearch import NotFoundError
 from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
 from langchain_core.load import dumps, loads
 
@@ -46,7 +48,7 @@ class ElasticsearchCache(BaseCache, ElasticsearchIndexer):
         self._metadata = metadata
         self._manage_index()
 
-    @property
+    @cached_property
     def mapping(self) -> Dict[str, Any]:
         """Get the default mapping for the index."""
         return {
@@ -85,7 +87,7 @@ class ElasticsearchCache(BaseCache, ElasticsearchIndexer):
                 record = self._es_client.get(
                     index=self._es_index, id=cache_key, source=["llm_output"]
                 )
-            except elasticsearch.exceptions.NotFoundError:
+            except NotFoundError:
                 return None
         return [loads(item) for item in record["_source"]["llm_output"]]
 

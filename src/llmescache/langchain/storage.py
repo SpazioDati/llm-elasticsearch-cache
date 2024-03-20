@@ -1,6 +1,7 @@
 import hashlib
 import logging
 from datetime import datetime
+from functools import cached_property
 from typing import List, Optional, Iterator, Sequence, Tuple, Any, Dict, Iterable
 
 import elasticsearch
@@ -46,7 +47,7 @@ class ElasticsearchStore(BaseStore[str, List[float]], ElasticsearchIndexer):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._manage_index()
 
-    @property
+    @cached_property
     def mapping(self) -> Dict[str, Any]:
         """Get the default mapping for the index."""
         return {
