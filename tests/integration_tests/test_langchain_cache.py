@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessage
 from langchain_core.outputs import ChatGeneration
 
 
-def test_initialization(es_cache_fx, fake_chat_fx):
+def test_hit_and_miss(es_cache_fx, fake_chat_fx):
     cache_mock = MagicMock(es_cache_fx)
     set_llm_cache(cache_mock)
     cache_mock.lookup.return_value = None
