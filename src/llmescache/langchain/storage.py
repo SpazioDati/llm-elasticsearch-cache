@@ -71,6 +71,8 @@ class ElasticsearchStore(BaseStore[str, List[float]], ElasticsearchIndexer):
 
     def mget(self, keys: Sequence[str]) -> List[Optional[List[float]]]:
         """Get the values associated with the given keys."""
+        if not any(keys):
+            return []
         cache_keys = [self._key(k) for k in keys]
         if self._is_alias:
             results = self._es_client.search(

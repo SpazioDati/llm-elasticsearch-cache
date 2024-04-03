@@ -5,7 +5,7 @@ from elasticsearch._sync.client import IndicesClient
 from langchain_community.chat_models.fake import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage
 
-from llmescache.langchain import ElasticsearchCache
+from llmescache.langchain import ElasticsearchCache, ElasticsearchStore
 
 
 @pytest.fixture
@@ -23,7 +23,19 @@ def es_cache_fx(es_client_fx):
         store_input=True,
         store_timestamp=True,
         store_input_params=True,
-        metadata={"project": "test"},
+        metadata={"project": "test_project"},
+    )
+
+
+@pytest.fixture
+def es_store_fx(es_client_fx):
+    yield ElasticsearchStore(
+        es_client=es_client_fx,
+        es_index="test_index",
+        store_input=True,
+        store_timestamp=True,
+        namespace="test",
+        metadata={"project": "test_project"},
     )
 
 
