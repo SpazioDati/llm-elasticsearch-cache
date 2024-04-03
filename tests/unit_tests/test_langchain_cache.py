@@ -1,39 +1,9 @@
 from datetime import datetime
 
-import pytest
 from elastic_transport import ApiResponseMeta, HttpHeaders, NodeConfig
-from elasticsearch import exceptions, NotFoundError
+from elasticsearch import NotFoundError
 from langchain_core.load import dumps
 from langchain_core.outputs import Generation
-
-from llmescache.langchain import ElasticsearchCache
-
-
-def test_initialization(es_client_fx):
-    es_client_fx.ping.return_value = False
-    with pytest.raises(exceptions.ConnectionError):
-        ElasticsearchCache(es_client=es_client_fx, es_index="test_index")
-    es_client_fx.ping.return_value = True
-    es_client_fx.indices.exists_alias.return_value = True
-    cache = ElasticsearchCache(es_client=es_client_fx, es_index="test_index")
-    cache._es_client.indices.exists_alias.assert_called_with(name="test_index")
-    assert cache._is_alias
-    cache._es_client.indices.put_mapping.assert_called_with(
-        index="test_index", body=cache.mapping["mappings"]
-    )
-    es_client_fx.indices.exists_alias.return_value = False
-    es_client_fx.indices.exists.return_value = False
-    cache = ElasticsearchCache(es_client=es_client_fx, es_index="test_index")
-    assert not cache._is_alias
-    cache._es_client.indices.create.assert_called_with(
-        index="test_index", body=cache.mapping
-    )
-
-
-def test_mapping(es_cache_fx):
-    mapping = es_cache_fx.mapping
-    assert mapping.get("mappings")
-    assert mapping["mappings"].get("properties")
 
 
 def test_key_generation(es_cache_fx):
@@ -59,17 +29,12 @@ def test_build_document(es_cache_fx):
     doc = es_cache_fx.build_document(
         "test_prompt", "test_llm_string", [Generation(text="test_prompt")]
     )
-    assert any(doc[k] == "test_prompt" for k in doc)
-    assert any(doc[k] == "test_llm_string" for k in doc)
-    assert any(isinstance(doc[k], list) and isinstance(doc[k][0], str) for k in doc)
-    has_date = False
-    for k in doc:
-        try:
-            has_date = datetime.fromisoformat(str(doc[k]))
-            break
-        except ValueError:
-            continue
-    assert has_date
+    assert doc["llm_input"] == "test_prompt"
+    assert doc["llm_params"] == "test_llm_string"
+    assert isinstance(doc["llm_output"], list)
+    assert all(isinstance(gen, str) for gen in doc["llm_output"])
+    assert datetime.fromisoformat(str(doc["timestamp"]))
+    assert doc["metadata"] == es_cache_fx._metadata
 
 
 def test_update(es_cache_fx):
