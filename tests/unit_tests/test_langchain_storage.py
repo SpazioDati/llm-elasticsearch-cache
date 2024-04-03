@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Dict, Any
+from unittest.mock import patch, ANY
 
 
 def test_key_generation(es_store_fx):
@@ -83,3 +85,53 @@ def test_mget(es_store_fx):
         [1.5, 2, 3.6],
         [5, 6, 7.1],
     ]
+
+
+def _del_timestamp(doc: Dict[str, Any]) -> Dict[str, Any]:
+    del doc["_source"]["timestamp"]
+    return doc
+
+
+def test_mset(es_store_fx):
+    input = [("test_text1", [1.5, 2, 3.6]), ("test_text2", [5, 6, 7.1])]
+    actions = [
+        {
+            "_op_type": "index",
+            "_id": es_store_fx._key(k),
+            "_source": es_store_fx.build_document(k, v),
+        }
+        for k, v in input
+    ]
+    es_store_fx._is_alias = False
+    with patch("elasticsearch.helpers.bulk") as bulk_mock:
+        es_store_fx.mset([])
+        bulk_mock.assert_called_once()
+        es_store_fx.mset(input)
+        bulk_mock.assert_called_with(
+            client=es_store_fx._es_client,
+            actions=ANY,
+            index="test_index",
+            require_alias=False,
+            refresh=True,
+        )
+        assert [_del_timestamp(d) for d in bulk_mock.call_args.kwargs["actions"]] == [
+            _del_timestamp(d) for d in actions
+        ]
+
+
+def test_mdelete(es_store_fx):
+    input = ["test_text1", "test_text2"]
+    actions = [{"_op_type": "delete", "_id": es_store_fx._key(k)} for k in input]
+    es_store_fx._is_alias = False
+    with patch("elasticsearch.helpers.bulk") as bulk_mock:
+        es_store_fx.mdelete([])
+        bulk_mock.assert_called_once()
+        es_store_fx.mdelete(input)
+        bulk_mock.assert_called_with(
+            client=es_store_fx._es_client,
+            actions=ANY,
+            index="test_index",
+            require_alias=False,
+            refresh=True,
+        )
+        assert list(bulk_mock.call_args.kwargs["actions"]) == actions
