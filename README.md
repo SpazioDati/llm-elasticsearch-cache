@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> ## This library is now part of LangChain, follow the official documentation, e.g. [for the LLM cache](https://python.langchain.com/docs/integrations/llms/llm_caching/#elasticsearch-cache)
+
 # llm-elasticsearch-cache
 
 A caching layer for LLMs that exploits Elasticsearch, fully compatible with LangChain caching, both for chat and embeddings models.
