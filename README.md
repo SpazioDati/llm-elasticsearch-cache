@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> ## This library is now part of LangChain, follow the official documentation, e.g. [for the LLM cache](https://python.langchain.com/docs/integrations/llms/llm_caching/#elasticsearch-cache)
+> ## This library is now part of LangChain, follow the official documentation, e.g. [for the LLM cache](https://python.langchain.com/v0.2/docs/integrations/llm_caching/#elasticsearch-cache)
 
 # llm-elasticsearch-cache
 
@@ -14,7 +14,7 @@ pip install llm-elasticsearch-cache
 ## Chat cache usage
 
 The LangChain cache can be used similarly to the
-[other cache integrations](https://python.langchain.com/docs/integrations/llms/llm_caching).
+[other cache integrations](https://python.langchain.com/v0.2/docs/integrations/llm_caching/).
 
 ### Basic example
 
