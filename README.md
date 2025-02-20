@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> ## This library is now part of LangChain, follow the official documentation, e.g. [for the LLM cache](https://python.langchain.com/v0.2/docs/integrations/llm_caching/#elasticsearch-cache)
+> ## The project is archived. This library is now part of LangChain, follow the official documentation, e.g. [for the LLM cache](https://python.langchain.com/v0.2/docs/integrations/llm_caching/#elasticsearch-cache)
 
 # llm-elasticsearch-cache
 
